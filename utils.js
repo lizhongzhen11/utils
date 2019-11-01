@@ -105,3 +105,23 @@ const reduce = (obj, cb, initial = 0) => {
   }
   return result;
 }
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} cb
+ * @description 模拟数组find 
+ */
+const find = (arr, cb) => {
+  if (type(arr) !== '[object Array]') {
+    throw new Error('请传递一个数组');
+  }
+  let i, length = arr.length, isPass;
+  for (i = 0; i < length; i++) {
+    isPass = cb.call(arr, arr[i]);
+    if (isPass) {
+      return arr[i];
+    }
+  }
+  return undefined;
+}
