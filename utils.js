@@ -125,3 +125,18 @@ const find = (arr, cb) => {
   }
   return undefined;
 }
+
+
+/**
+ * @description 模拟数组filter。记住最终返回所有符合元素构成的数组。cb必须返回true或false。
+ */
+const filter = (arr, cb) => {
+  if (type(arr) !== '[object Array]') {
+    throw new Error('请传递一个数组');
+  }
+  let i, length = arr.length, result = [];
+  for (i = 0; i < length; i++) {
+    !!cb.call(arr, arr[i]) && result.push(arr[i]);
+  }
+  return result;
+}
