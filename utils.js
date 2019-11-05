@@ -140,3 +140,25 @@ const filter = (arr, cb) => {
   }
   return result;
 }
+
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} props
+ * @description 在数组对象里面根据给定的对象key-value值找对应符合条件的所有对象，并返回一个数组 
+ * underscore源码复用了很多它已有的api，其本质代码应该是下面这样的
+ */
+const where = (list, props) => {
+  if (type(list) !== '[object Array]' || type(props) !== '[object Object]') {
+    throw new Error('第一个参数应该是一个数组，第二个参数应该是一个普通对象');
+  }
+  const keys = Object.keys(props);
+  let result = [], length = keys.length;
+  list.forEach(item => {
+    for (let i = 0; i < length; i++) {
+      item[keys[i]] === props[keys[i]] && result.push(item);
+    }
+  })
+  return result;
+}
