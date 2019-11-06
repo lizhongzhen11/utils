@@ -147,7 +147,7 @@ const filter = (arr, cb) => {
  * @param {*} list 
  * @param {*} props
  * @description 在数组对象里面根据给定的对象key-value值找对应符合条件的所有对象，并返回一个数组 
- * underscore源码复用了很多它已有的api，其本质代码应该是下面这样的
+ * underscore源码复用了很多它已有的api，其本质代码应该是下面这样的。underscore通过isMatch返回true/false来判断的
  */
 const where = (list, props) => {
   if (type(list) !== '[object Array]' || type(props) !== '[object Object]') {
@@ -157,8 +157,40 @@ const where = (list, props) => {
   let result = [], length = keys.length;
   list.forEach(item => {
     for (let i = 0; i < length; i++) {
-      item[keys[i]] === props[keys[i]] && result.push(item);
+      if (item[keys[i]] !== props[keys[i]]) {
+        break;
+      }
+      result.push(item);
     }
   })
   return result;
+}
+
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} prop
+ * @description 类似数组的indexOf，只不过这里的数组元素是对象，查找第一个符合条件的key-value对象 
+ * 难点在于必须要满足props对象内的所有key-value对。
+ * 一有不符合条件就要break出来。
+ * 起码编写了8分钟，还是配合控制台打印才发现错误的。
+ */
+const findWhere = (arr, props) => {
+  if (type(arr) !== '[object Array]' || type(props) !== '[object Object]') {
+    throw new Error('第一个参数应该是一个数组，第二个参数应该是一个普通对象');
+  }
+  let keys = Object.keys(props);
+  let i, j, length = arr.length, len = keys.length, index = -1;
+  for (i = 0; i < length; i++) {
+    for (j = 0; j < len; j++ ) {
+      if (arr[i][keys[j]] !== props[keys[j]]) {
+        break;
+      }
+      index = i;
+      return index;
+    }
+  }
+  return index;
 }

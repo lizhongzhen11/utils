@@ -66,3 +66,28 @@ const flipTest = flip((rest, first) => {
   console.log(...rest, first)
 })
 flipTest(1, [2, 3, 4]) // 2, 3, 4, 1
+
+
+
+/**
+ * 
+ * @param  {...any} fns 
+ * @description 其实就是把一堆函数传入封装，然后给它们相同的参数去调用
+ * const over = (...fns) => {
+ *   return (...args) => {
+ *     return fns.map(fn => {
+ *       return fn.apply(null, args) 
+ *     }) 
+ *   }
+ * }
+ */
+const over = (...fns) => (...args) => fns.map(fn => fn.apply(null, args));
+
+const overTest = over(...[
+  (args) => {console.log(args)},
+  (args) => {console.log(args.length)}
+])
+overTest([1, 2, 3])
+// [1, 2, 3]
+// 3
+// [undefined, undefined]
