@@ -14,6 +14,25 @@ const type = (arg) => {
   return Object.prototype.toString.call(arg);
 }
 
+
+/**
+ * 
+ * @param {*} obj Object
+ * @param {*} props Object
+ * @description 比较两个对象，看obj是不是完全包容props对象内的所有自身属性以及值是否相同
+ */
+const match = (obj, props) => {
+  let keys = Object.keys(props);
+  let i = 0, len = keys.length;
+  for (i; i < len; i++) {
+    if (obj[keys[i]] !== props[keys[i]]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 /**
  * @description 返回callback函数
  */
@@ -148,20 +167,22 @@ const filter = (arr, cb) => {
  * @param {*} props
  * @description 在数组对象里面根据给定的对象key-value值找对应符合条件的所有对象，并返回一个数组 
  * underscore源码复用了很多它已有的api，其本质代码应该是下面这样的。underscore通过isMatch返回true/false来判断的
+ * 后来我开始参考underscore进行了改写
  */
 const where = (list, props) => {
   if (type(list) !== '[object Array]' || type(props) !== '[object Object]') {
     throw new Error('第一个参数应该是一个数组，第二个参数应该是一个普通对象');
   }
-  const keys = Object.keys(props);
+  // const keys = Object.keys(props);
   let result = [], length = keys.length;
   list.forEach(item => {
-    for (let i = 0; i < length; i++) {
-      if (item[keys[i]] !== props[keys[i]]) {
-        break;
-      }
-      result.push(item);
-    }
+    match(item, props) && result.push(item);
+    // for (let i = 0; i < length; i++) {
+    //   if (item[keys[i]] !== props[keys[i]]) {
+    //     break;
+    //   }
+    //   result.push(item);
+    // }
   })
   return result;
 }
@@ -181,16 +202,36 @@ const findWhere = (arr, props) => {
   if (type(arr) !== '[object Array]' || type(props) !== '[object Object]') {
     throw new Error('第一个参数应该是一个数组，第二个参数应该是一个普通对象');
   }
-  let keys = Object.keys(props);
+  // let keys = Object.keys(props);
   let i, j, length = arr.length, len = keys.length, index = -1;
   for (i = 0; i < length; i++) {
-    for (j = 0; j < len; j++ ) {
-      if (arr[i][keys[j]] !== props[keys[j]]) {
-        break;
-      }
+    if (match(arr[i], props)) {
       index = i;
       return index;
     }
+    // for (j = 0; j < len; j++ ) {
+    //   if (arr[i][keys[j]] !== props[keys[j]]) {
+    //     break;
+    //   }
+    //   index = i;
+    //   return index;
+    // }
   }
   return index;
+}
+
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} fn
+ * @description 得到不通过条件的数据构成的数组 
+ */
+const reject = (arr, fn) => {
+  let i = 0, length = arr.length, result = [];
+  for (i; i < length; i++) {
+    !fn.call(null, arr[i]) && result.push(arr[i]);
+  }
+  return result;
 }

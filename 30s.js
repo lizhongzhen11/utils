@@ -91,3 +91,44 @@ overTest([1, 2, 3])
 // [1, 2, 3]
 // 3
 // [undefined, undefined]
+
+
+
+/**
+ * 
+ * @param {*} fn 
+ * @param {*} transforms 得是个数组，并且元素是函数，长度至少要和args相同
+ * @description 挺复杂的
+ * const overArgs = (fn, transforms) => {
+ *   return (...args) => {
+ *     return fn(...args.map((val, i) => {
+ *       return transforms[i](val);
+ *     }))
+ *   }
+ * } 
+ * 
+ * 注意点：主要是扩展运算符的难点！
+ * (...args)本质上是对arguments的扩展。
+ * 如果这样传：fn([1, 2, 3])则[1, 2, 3]只是arguments中的某 “一个” 参数，不是三个！
+ * 如果这样传：fn(...[1, 2, 3])则会先扩展成3个参数，代表arguments也会有这 “三个” 参数！！！
+ */
+const overArgs = (fn, transforms) => (...args) => fn(...args.map((val, i) => transforms[i](val)));
+
+const overArgsTest = overArgs((...args) => {
+  console.log(...args);
+}, [
+  (val) => {
+    console.log('......' + val);
+    return '......' + val;
+  },
+  (val) => {
+    console.log(',,,,,,' + val);
+    return ',,,,,,' + val;
+  },
+  (val) => {
+    console.log('------' + val);
+    return '------' + val
+  }
+])
+
+overArgsTest(...[1, 2, 3]);
