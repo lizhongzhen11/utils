@@ -235,3 +235,89 @@ const reject = (arr, fn) => {
   }
   return result;
 }
+
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} fn
+ * @description 类 数组的every 
+ */
+const every = (arr, fn) => {
+  let i = 0, len = arr.length;
+  for (i; i < len; i++) {
+    if (!fn.call(null, arr[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} fn
+ * @description 类 数组的some 
+ */
+const some = (arr, fn) => {
+  let i = 0, len = arr.length;
+  for (i; i < len; i++) {
+    if (fn.call(null, arrp[i])) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+
+
+/**
+ * @description 平铺树结构；必须包含children属性
+ */
+const flatTree = (arr) => {
+  return arr.reduce((item, next) => {
+    return next.children ? item.concat(flat(next.children), next) : item.concat(next)
+  }, [])
+}
+
+const city = [
+  {
+    value: '11',
+    children: [
+      {
+        value: '11',
+        children: [
+          {
+            value: '1100'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    value: '12',
+    children: [
+      {
+        value: '120',
+        children: [
+          {
+            value: '1200'
+          }
+        ]
+      }
+    ]
+  },
+  {
+    value: '22',
+    children: [
+      {value: '220'},
+      {value: '221', children: [{value: '2210'}]}
+    ]
+  }
+]
+
+flatTree(city); // 平铺成功
