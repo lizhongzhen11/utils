@@ -348,15 +348,35 @@ const contains = (arr, target, start = 0) => {
  * @description 对集合中每个元素都执行 methodName 方法，args也会作为 methodName 方法的参数调用
  */
 // 只实现了传入 二维数组以及数组api功能
-const invoke = (list, methodName, args) => {
-  if (!list || !methodName) {
-    throw new Error('请传入list和方法名');
+// const invoke = (list, methodName, args) => {
+//   if (!list || !methodName) {
+//     throw new Error('请传入list和方法名');
+//   }
+//   if (type(list) === '[object Array]') {
+//     return list.map(item => {
+//       if (type(item[methodName]) === "[object Function]" && type(item) === '[object Array]')) {
+//         return item[methodName]()
+//       }
+//     })
+//   }
+// }
+
+// 实现传入 二维数组和数组api；普通数组和普通方法以及其余参数 两种方式
+// method 可以是方法名也可以是方法。
+// 如果list是二维数组的话，那么可以是数组的api名；不是二维数组的话，则只能是普通函数了。
+const invoke = (list, method, args) => {
+  if (!list || !method) {
+    throw new Error('请传入list和方法');
   }
-  if (type(list) === '[object Array]') {
-    return list.map(item => {
-      if (type(item[methodName]) === "[object Function]") {
-        return item[methodName]()
-      }
-    })
+  if (!isArrayLike(list)) {
+    throw new Error('list必须是类数组对象');
   }
+  return list.map(item => {
+    if (type(item) === '[object Array]' && type(item[method]) === "[object Function]") {
+      return item[method]();
+    }
+    if (type(method) === "[object Function]") {
+      return method.apply(null, [item, ...args]);
+    }
+  })
 }
