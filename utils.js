@@ -321,3 +321,42 @@ const city = [
 ]
 
 flatTree(city); // 平铺成功
+
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} target 
+ * @param {*} start
+ * @description 和some类似，但是这里可以有第三个参数，代表从指定下标开始查找 
+ */
+const contains = (arr, target, start = 0) => {
+  if (type(arr) !== '[object Array]') {
+    throw new Error('第一个参数应该是一个数组');
+  }
+  return arr.slice(start).includes(target);
+}
+
+
+
+/**
+ * 
+ * @param {*} list 集合
+ * @param {*} methodName 方法名1
+ * @param {*} args 其余参数
+ * @description 对集合中每个元素都执行 methodName 方法，args也会作为 methodName 方法的参数调用
+ */
+// 只实现了传入 二维数组以及数组api功能
+const invoke = (list, methodName, args) => {
+  if (!list || !methodName) {
+    throw new Error('请传入list和方法名');
+  }
+  if (type(list) === '[object Array]') {
+    return list.map(item => {
+      if (type(item[methodName]) === "[object Function]") {
+        return item[methodName]()
+      }
+    })
+  }
+}
