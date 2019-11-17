@@ -17,6 +17,19 @@ const type = (arg) => {
 
 /**
  * 
+ * @param {*} list
+ * @description 将类数组对象转为数组 
+ */
+const toArray = (list) => {
+  if (!isArrayLike(list)) {
+    throw '请传入数组或类数组对象';
+  }
+  return [].slice.apply(list);
+}
+
+
+/**
+ * 
  * @param {*} obj Object
  * @param {*} props Object
  * @description 比较两个对象，看obj是不是完全包容props对象内的所有自身属性以及值是否相同
@@ -364,19 +377,108 @@ const contains = (arr, target, start = 0) => {
 // 实现传入 二维数组和数组api；普通数组和普通方法以及其余参数 两种方式
 // method 可以是方法名也可以是方法。
 // 如果list是二维数组的话，那么可以是数组的api名；不是二维数组的话，则只能是普通函数了。
+// const invoke = (list, method, args) => {
+//   if (!list || !method) {
+//     throw new Error('请传入list和方法');
+//   }
+//   if (!isArrayLike(list)) {
+//     throw new Error('list必须是类数组对象');
+//   }
+//   return list.map(item => {
+//     if (type(item) === '[object Array]' && type(item[method]) === "[object Function]") {
+//       return item[method]();
+//     }
+//     if (type(method) === "[object Function]") {
+//       return method.apply(null, [item, ...args]);
+//     }
+//   })
+// }
+
+
+// list 可能是数组，也可能是类数组对象
+// 先考虑 list 是二维数组情况，methodName 是数组已存在的api名
+// args 根据传入的 methodName 来决定是函数数组还是其它
+// const invoke = (list, methodName, args) => {
+//   return map(list, (context) => {
+//     const method = context[methodName];
+//     return method.apply(context, args);
+//   })
+// }
+
+// 现在考虑 list 是一维数组情况
+// 如果是 一维数组，那么 context 就是普通元素了
+// method可能是函数也可能是数组的api方法名
 const invoke = (list, method, args) => {
-  if (!list || !method) {
-    throw new Error('请传入list和方法');
-  }
-  if (!isArrayLike(list)) {
-    throw new Error('list必须是类数组对象');
-  }
-  return list.map(item => {
-    if (type(item) === '[object Array]' && type(item[method]) === "[object Function]") {
-      return item[method]();
+  let func;
+  if (type(method) === '[object Function]') {
+    func = method;
+  } 
+  return map(list, (context) => {
+    // 二维数组且method是string，默认调用数组的api
+    if (!Array.isArray(context) && typeof method === 'string') {
+      throw '一维数组，method应传入目标函数'
     }
-    if (type(method) === "[object Function]") {
-      return method.apply(null, [item, ...args]);
+    let tempMethod = Array.isArray(context) && typeof method === 'string' ? context[method] : func;
+    return tempMethod.apply(context, args); 
+  })
+}
+
+
+
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} property
+ * @description 从list中提取目标属性的值，返回值组成的数组 
+ */
+const pluck = (list, propertyName) => {
+  return map(list, (item) => {
+    if (item.hasOwnProperty(propertyName)) {
+      return item[propertyName]
     }
+  })
+}
+
+
+
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} cb 
+ * @description 返回list中的最大值。
+ *              空list直接返回 -Infinity。
+ *              忽略非数值 值
+ *              我这个要求数组或类数组
+ */
+const max = (list, cb) => {
+  const arr = toArray(list);
+  if (!arr.length) {
+    return -Infinity;
+  }
+  return arr.reduce((prev, next) => {
+    return cb.call(null, prev) > cb.call(null, next) ? prev : next;
+  })
+}
+
+
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} cb 
+ * @description 返回list中的最小值。
+ *              空list直接返回 -Infinity。
+ *              忽略非数值 值
+ *              我这个要求数组或类数组
+ */
+const mix = (list, cb) => {
+  const arr = toArray(list);
+  if (!arr.length) {
+    return Infinity;
+  }
+  return arr.reduce((prev, next) => {
+    return cb.call(null, prev) > cb.call(null, next) ? next : prev;
   })
 }
