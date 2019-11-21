@@ -1,8 +1,9 @@
-/**
- * @description 判断是不是类数组对象。参考underscore，根据鸭子类型来判断。需要长度在 0 和 Number的最大安全值之间。
- */
 const isArrayLike = (obj) => {
-  return typeof obj.length === 'number' && obj.length >= 0 && obj.length <= Number.MAX_SAFE_INTEGER;
+  const isKeyNumber = Object.keys(obj).every(item => (item.trim() && Number(item) >= 0) || item === 'length');
+  return isKeyNumber && 
+            type(obj.length) === '[object Number]' && 
+                obj.length >= 0 && 
+                    obj.length <= Number.MAX_SAFE_INTEGER;
 }
 
 /**
@@ -96,22 +97,20 @@ const each = (obj, cb, context) => {
 
 /**
  * 
- * @param {*} obj 
+ * @param {*} list 
  * @param {*} cb
  * @description 模拟的是数组map方法，只不过对象也可以。核心代码与each一样 
  */
-const map = (obj, cb) => {
-  let i, length, result = [];
-  if (isArrayLike(obj)) {
-    for (i = 0, length = obj.length; i < length; i++) {
-      result.push(cb.call(obj, obj[i]));
-    }
-  } else {
-    let keys = Object.keys(obj);
-    length = keys.length;
-    for (i = 0; i < length; i++) {
-      result.push(cb.call(obj, obj[keys[i]]));
-    }
+const map = (list, cb) => {
+  if (type(cb) !== '[object Function]') {
+    throw '请传入处理函数';
+  }
+  const keys = !isArrayLike(list) && Object.keys(list);
+  const len = (list || keys).length;
+  let result = Array(len);
+  for (let i = 0; i < len; i++) {
+    const currentKey = keys ? keys[i] : i;
+    result[i] = cb(list[currentKey]);
   }
   return result;
 }
@@ -482,3 +481,265 @@ const mix = (list, cb) => {
     return cb.call(null, prev) > cb.call(null, next) ? next : prev;
   })
 }
+
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} methodName 方法名
+ * @param {*} cb 处理函数
+ * @description underscore的sortBy第二个参数既可以是string也可以是函数，
+ *              这样不好，我认为应该将两种参数类型区分开
+ */
+const sortBy = (list, methodName, cb) => {
+  let index = 0;
+  if (type(list[methodName]) === '[object Function]') {
+    return list[methodName]();
+  }
+  return map(list, (item) => {
+    return {
+      value: item,
+      index: index++,
+      cbVal: cb ? cb(item) : item
+    }
+  }).sort((left, right) => {
+    const l = left.cbVal;
+    const r = right.cbVal;
+    if (l !== r) {
+      if (l > r || l == undefined) {
+        return 1;
+      }
+      if (l < r || r == undefined) {
+        return -1;
+      }
+    }
+    return l.index - r.index;
+  }).map(item => item.value)
+}
+
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} iteratee 
+ * @param {*} type
+ * @param {*} result
+ * @description 将 groupBy, indexBy, countBy 公共部分抽出来
+ * 第一版
+ */
+// const group = ({ list, iteratee, type, result }) => {
+//   map(list, (item) => {
+//     let key;
+//     switch (type) {
+//       case 'index':
+//         key = item[iteratee];
+//         result[key] = item;
+//         break;
+//       case 'count':
+//         key = iteratee(item);
+//         result[key] = result[key] ? ++result[key] : 1;
+//         break;
+//       default:
+//         key = item[iteratee] || iteratee(item)
+//         result[key] = result[key] ? [...result[key], item] : [item];
+//         break;
+//     }
+//   })
+// }
+
+// 第二版
+// 由于groupBy, indexBy, countBy 只在最后存值时不同，
+// 这里核心思想把最后存值操作控制权交由外部相应的方法
+const group = (cb, isPartition) => {
+  let result = isPartition ? [[], []] : {};
+  return (list, iteratee) => {
+    map(list, item => {
+      const key = item[iteratee] || iteratee(item);
+      cb(result, key, item);
+    })
+    return result;
+  }
+}
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} iteratee
+ * @description 把一个集合分组为多个集合，通过 iterator 返回的结果进行分组.
+ * 如果 iterator 是一个字符串而不是函数, 那么将使用 iterator 作为各元素的属性名来对比进行分组.
+ */
+// const groupBy = (list, iteratee) => {
+//   // let result = {};
+//   // low 逼版
+//   // if (type(iteratee) === '[object String]') {
+//   //   map(list, (item) => {
+//   //     if (result.hasOwnProperty(item[iteratee])) {
+//   //       result[item[iteratee]].push(item);
+//   //       return;
+//   //     }
+//   //     result[item[iteratee]] = [item];
+//   //   })
+//   // }
+//   // if (type(iteratee) === '[object Function]') {
+//   //   map(list, (item) => {
+//   //     const key = iteratee(item);
+//   //     if (result.hasOwnProperty(key )) {
+//   //       result[key].push(item);
+//   //       return;
+//   //     }
+//   //     result[key] = [item];
+//   //   })
+//   // }
+//   // return result;
+
+//   // 优化融合版
+//   // const isFunc = type(iteratee) === '[object Function]';
+//   // map(list, (item) => {
+//   //   const key = isFunc ? iteratee(item) : item[iteratee];
+//   //   if (result.hasOwnProperty(key)) {
+//   //     result[key].push(item);
+//   //     return;
+//   //   }
+//   //   result[key] = [item];
+//   // })
+//   // return result;
+
+
+//   // 使用group第一版
+//   group({list, iteratee, type: 'group', result})
+//   return result;
+// }
+
+
+/**
+ * @description 使用第二版group，闭包方式
+ */
+const groupBy = group((result, key, item) => {
+  if (result[key]) {
+    result[key].push(item);
+    return
+  }
+  result[key] = [item];
+})
+
+// console.log(groupBy(['one', 'two', 'three'], 'length'))
+// console.log(groupBy(['one', 'two', 'three'], 'codePointAt'))
+// console.log(groupBy([1.3, 2.1, 2.4], function (num) { return Math.floor(num); } ))
+// console.log(groupBy([{ name: 'moe', age: 40 }, { name: 'larry', age: 50 }, { name: 'curly', age: 60 }], 'age'))
+
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} uniqueKey
+ * @description 返回一个每一项索引的对象。
+ * 和 groupBy 非常像，但是当你知道你的键是唯一的时候可以使用indexBy。
+ */
+// const indexBy = (list, uniqueKey) => {
+//   if (type(uniqueKey) !== '[object String]') {
+//     throw '请传入唯一key';
+//   }
+//   let result = {};
+//   // map(list, (item) => {
+//   //   const key = item[uniqueKey];
+//   //   if (!result.hasOwnProperty(key)) {
+//   //     result[key] = item;
+//   //   }
+//   // })
+//   // return result;
+
+//   // 使用group第一版
+//   group({ list, iteratee: uniqueKey, type: 'index', result })
+//   return result;
+// }
+
+
+// 使用第二版group
+const indexBy = group((result, key, item) => {
+  result[key] = item
+})
+// console.log(indexBy([{ name: 'moe', age: 40 }, { name: 'larry', age: 50 }, { name: 'curly', age: 60 }], 'age'))
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} iteratee
+ * @description 排序一个列表组成多个组，并且返回各组中的对象的数量的计数。
+ * 类似groupBy，但是不是返回列表的值，而是返回在该组中值的数量。
+ */
+// const countBy = (list, iteratee) => {
+//   if (type(iteratee) !== '[object Function]') {
+//     throw '请传入处理函数';
+//   }
+//   let result = {};
+//   // map(list, (item) => {
+//   //   const val = iteratee(item)
+//   //   if (result.hasOwnProperty(val)) {
+//   //     result[val] += 1;
+//   //     return;
+//   //   }
+//   //   result[val] = 1;
+//   // })
+//   // return result;
+
+
+//   // 使用group第一版
+//   group({ list, iteratee, type: 'count', result })
+//   return result;
+// }
+
+
+// 使用第二版group
+const countBy = group((result, key) => {
+  result[key] = result[key] ? ++result[key] : 1;
+})
+
+// console.log(
+//   countBy([1, 2, 3, 4, 5], function (num) {
+//     return num % 2 == 0 ? 'even' : 'odd';
+//   })
+// )
+
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} predicate
+ * @description 拆分一个数组（ array） 为两个数组： 
+ * 第一个数组其元素都满足predicate迭代函数， 
+ * 而第二个的所有元素均不能满足predicate迭代函数。
+ */
+// const partition = (list, predicate) => {
+//   let result = [[], []];
+//   map(list, (item) => {
+//     predicate(item) ? result[0].push(item) : result[1].push(item);
+//   })
+//   return result;
+// }
+
+// 第二版，使用group
+const partition = group((result, isPass, item) => {
+  isPass ? result[0].push(item) : result[1].push(item);
+}, true)
+
+// console.log(partition([0, 1, 2, 3, 4, 5], (item) => item % 2 === 0))
+
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} n
+ * @description 从 list中产生一个随机样本。
+ * 传递一个数字表示从list中返回n个随机元素。否则将返回一个单一的随机项。
+ * 实测，普通对象和类数组对象没用
+ */
+// const sample = (list, n) => {
+//   if (!Array.isArray(list)) {
+//     throw '请传入数组';
+//   }
+//   let len = list.length;
+//   let result = Array(len);
+//   Math.floor(Math.random(0, len));
+// }
+
+// console.log( Math.random() * 10) 
