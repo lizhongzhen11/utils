@@ -743,3 +743,198 @@ const partition = group((result, isPass, item) => {
 // }
 
 // console.log( Math.random() * 10) 
+
+
+/**
+ * @default
+ * @default
+ * @description Array api
+ * @default
+ * @default
+ */
+
+
+/**
+ * @description 返回array（ 数组） 的第一个元素
+ * 传递 n 参数将返回数组中从第一个元素开始的n个元素
+ * 
+ * 根据实际测试，有以下注意点：
+ * 1.不传 n ,默认返回第一个元素；正常
+ * 2.传 0,返回 []；也能理解
+ * 3.传 1,返回 [第一个元素]，这个。。。居然返回数组了。。。
+ * 4.传 null,和不传一样，即null和undefined效果一样
+ * 5.传 Infinity 或 大于数组长度的数值 返回原数组
+ * 6.传 -Infinity 或 小于数组长度的数值 返回空数组 []
+ * 7.传 NaN, 返回空数组 []
+ */
+// const first = (arr, n) => {
+//   if (!isArrayLike(arr)) {
+//     throw '请传入数组或类数组对象';
+//   }
+//   // null / undefined
+//   if (n == void 0) {
+//     return arr[0];
+//   }
+//   let result = [];
+//   let len = arr.length;
+//   if (n >= len) {
+//     return arr;
+//   }
+//   if (n < len && n > 0) {
+//     for (let i = 0; i < n; i++) {
+//       result.push(arr[i]);
+//     }
+//   }
+//   return result;
+// }
+
+// console.log(first([1, 2, 3, 4, 5])) // 1
+// console.log(first([1, 2, 3, 4, 5], null)) // 1
+// console.log(first([1, 2, 3, 4, 5], 0)) // []
+// console.log(first([1, 2, 3, 4, 5], NaN)) // []
+// console.log(first([1, 2, 3, 4, 5], 1)) // [1]
+// console.log(first([1, 2, 3, 4, 5], Infinity)) // [1, 2, 3, 4, 5]
+// console.log(first([1, 2, 3, 4, 5], -Infinity)) // []
+// console.log(first([1, 2, 3, 4, 5], -0)) // []
+// console.log(first([1, 2, 3, 4, 5], -1)) // []
+// console.log(first([1, 2, 3, 4, 5], 3)) // [1, 2, 3]
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} n
+ * @description 返回数组中除了最后一个元素外的其他全部元素。数组
+ * 传递 n 参数将从结果中排除从最后一个开始的n个元素（ 注：排除数组后面的 n 个元素）
+ * 
+ * 根据实际测试，注意点：
+ * 1.返回值都是数组，不像first又是数组又是元素的，返回类型单一
+ * 2.不传 n, 默认返回排除最后一个元素的数组
+ * 3.n传null, 和不传n一致，即 null / undefined 效果一致
+ * 4.n传NaN, 返回空数组 []
+ * 5.n传大于数组长度的数值,包括Infinity, 返回空数组
+ * 6.n传小于0的数值,包括-Infinity, 返回原数组
+ * 7.n传0, 返回原数组
+ */
+// const initial = (arr, n) => {
+//   if (!isArrayLike(arr)) {
+//     throw '请传入数组或类数组对象';
+//   }
+//   let len = arr.length;
+//   let result = [];
+//   if (n == void 0) {
+//     return arr.slice(0, len - 1)
+//   }
+//   if (n < len && n > 0) {
+//     for (let i = 0; i < n - 1; i++) {
+//       result.push(arr[i]);
+//     }
+//   }
+//   if (n <= 0) {
+//     return arr;
+//   }
+//   return result;
+// }
+
+// console.log(initial([1, 2, 3, 4, 5])) // [1, 2, 3, 4]
+// console.log(initial([1, 2, 3, 4, 5], null)) // [1, 2, 3, 4]
+// console.log(initial([1, 2, 3, 4, 5], NaN)) // []
+// console.log(initial([1, 2, 3, 4, 5], 0)) // [1, 2, 3, 4, 5]
+// console.log(initial([1, 2, 3, 4, 5], Infinity)) // []
+// console.log(initial([1, 2, 3, 4, 5], -Infinity)) // [1, 2, 3, 4, 5]
+// console.log(initial([1, 2, 3, 4, 5], 5)) // []
+// console.log(initial([1, 2, 3, 4, 5], 3)) // [1, 2]
+
+
+/**
+ * @description 以上模拟first和initial时，忽略一个问题，即返回的应该是数组的副本才对！
+ * 还有一个问题，如何将这两个方法抽出公共的方法共用？如何去优化合并？
+ * 没有思路，所以去看了源码，发现源码中initial用的是数组原生的slice方法。
+ * 也挺好玩的，一方面不信任原生api，自己模拟了一些，一方面又不得不使用，
+ * 毕竟结合原生api写出来的代码更优美点，更易懂。
+ * 使用slice去重写以上两个方法
+ */
+
+const initial = (arr, n) => {
+  if (!isArrayLike(arr)) {
+    throw '请传入数组或类数组对象';
+  }
+  let len = arr.length;
+  // 三元判断太多了
+  // return Array.from(arr).slice(0, n == void 0 ? len - 1 : n <= 0 ? len : n >= len ? 0 : n - 1);
+  // 继续优化。主要是null/undefined情况表现有点不同
+  // 直接用 减法，配合slice，真的简便好多！！！
+  return Array.from(arr).slice(0, len - (n == null ? 1 : n));
+}
+
+// console.log(initial([1, 2, 3, 4, 5])) // [1, 2, 3, 4]
+// console.log(initial([1, 2, 3, 4, 5], null)) // [1, 2, 3, 4]
+// console.log(initial([1, 2, 3, 4, 5], NaN)) // []
+// console.log(initial([1, 2, 3, 4, 5], 0)) // [1, 2, 3, 4, 5]
+// console.log(initial([1, 2, 3, 4, 5], Infinity)) // []
+// console.log(initial([1, 2, 3, 4, 5], -Infinity)) // [1, 2, 3, 4, 5]
+// console.log(initial([1, 2, 3, 4, 5], 5)) // []
+// console.log(initial([1, 2, 3, 4, 5], 3)) // [1, 2]
+
+const first = (arr, n) => {
+  if (!isArrayLike(arr)) {
+    throw '请传入数组或类数组对象';
+  }
+  if (n == null) {
+    return arr[0];
+  }
+  // 稍微有点绕人
+  // 需要明白当 0 < n < arr.length时,调initial内部会 arr.length - n 即 arr.length - (arr.length - n) = n
+  // 这样就保证了 slice(0, n)
+  return initial(arr, n <= 0 ? arr.length : n >= arr.length ? 0 : arr.length - n);
+}
+
+// console.log(first([1, 2, 3, 4, 5])) // 1
+// console.log(first([1, 2, 3, 4, 5], null)) // 1
+// console.log(first([1, 2, 3, 4, 5], 0)) // []
+// console.log(first([1, 2, 3, 4, 5], NaN)) // []
+// console.log(first([1, 2, 3, 4, 5], 1)) // [1]
+// console.log(first([1, 2, 3, 4, 5], Infinity)) // [1, 2, 3, 4, 5]
+// console.log(first([1, 2, 3, 4, 5], -Infinity)) // []
+// console.log(first([1, 2, 3, 4, 5], -0)) // []
+// console.log(first([1, 2, 3, 4, 5], -1)) // []
+// console.log(first([1, 2, 3, 4, 5], 3)) // [1, 2, 3]
+// console.log(first([])) // undefined
+
+
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} n
+ * @description 返回数组中最后一个元素。
+ * 传递 n 参数将返回数组中从最后一个元素开始的n个元素 (注：返回数组里的后面的n个元素)
+ * 
+ * 根据实际测试， 注意点：
+ * 1.不传或传null, 返回最后一个元素
+ * 2.传NaN, 返回原数组副本
+ * 3.传0, 返回空数组[]
+ * 4.传-Infinity, 返回空数组[]
+ * 5.传Infinity, 返回原数组副本
+ * 6.传0 < n < arr.length, 返回 数组后面n个元素组成的新数组
+ */
+const last = (arr, n) => {
+  if (!isArrayLike(arr)) {
+    throw '请传入数组或类数组对象';
+  }
+  let len = arr.length;
+  if (n == null) {
+    return arr[len - 1];
+  }
+  return Array.from(arr).slice(n >= len ? 0 : len - n, len);
+}
+
+// console.log(last([])) // undefined
+// console.log(last([1, 2, 3, 4, 5])) // 5
+// console.log(last([1, 2, 3, 4, 5], null)) // 5
+// console.log(last([1, 2, 3, 4, 5], NaN)) // [1, 2, 3, 4, 5]
+// console.log(last([1, 2, 3, 4, 5], 0)) // []
+// console.log(last([1, 2, 3, 4, 5], -Infinity)) // []
+// console.log(last([1, 2, 3, 4, 5], Infinity)) // [1, 2, 3, 4, 5]
+// console.log(last([1, 2, 3, 4, 5], 2)) // [4, 5]
