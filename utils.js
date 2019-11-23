@@ -938,3 +938,150 @@ const last = (arr, n) => {
 // console.log(last([1, 2, 3, 4, 5], -Infinity)) // []
 // console.log(last([1, 2, 3, 4, 5], Infinity)) // [1, 2, 3, 4, 5]
 // console.log(last([1, 2, 3, 4, 5], 2)) // [4, 5]
+
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} index
+ * @description 返回数组中除了第一个元素外的其他全部元素。
+ * 传递 index 参数将返回从index开始的剩余所有元素 
+ * 
+ * 根据实际测试， 注意点：
+ * 1. 不传 index 或传 null, 返回除第一个元素外 其它所有元素组成的新数组
+ * 2. 传NaN, 返回原数组副本
+ * 3. 传false, 返回原数组副本
+ * 4. 传true, 效果和不传一样
+ * 5. 传0, 效果和不传一样
+ * 6. 传Infinity, 返回 []
+ * 7. 传-Infinity, 和不传一样
+ * 8. 传'', 和不传一样
+ * 9. 传 Symbol, 报错
+ * 10. 传对象, 和不传一样
+ */
+const rest = (arr, index) => {
+  if (!isArrayLike(arr)) {
+    throw '请传入数组或类数组对象';
+  }
+  return Array.from(arr).slice(index == null ? 1 : index);
+}
+
+// console.log(rest([1, 2, 3, 4, 5])) // [2, 3, 4, 5]
+// console.log(rest([1, 2, 3, 4, 5], NaN)) // [1, 2, 3, 4, 5]
+// console.log(rest([1, 2, 3, 4, 5], false)) // [1, 2, 3, 4, 5]
+// console.log(rest([1, 2, 3, 4, 5], true)) // [2, 3, 4, 5]
+// console.log(rest([1, 2, 3, 4, 5], 0)) // [1, 2, 3, 4, 5]
+// console.log(rest([1, 2, 3, 4, 5], Infinity)) // []
+// console.log(rest([1, 2, 3, 4, 5], -Infinity)) // [1, 2, 3, 4, 5]
+// console.log(rest([1, 2, 3, 4, 5], '')) // [1, 2, 3, 4, 5]
+// console.log(rest([1, 2, 3, 4, 5], {})) // [1, 2, 3, 4, 5]
+// console.log(rest([1, 2, 3, 4, 5], Symbol(1))) // 报错
+// console.log(rest([1, 2, 3, 4, 5], 2)) // [3, 4, 5]
+
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @description 返回一个除去了所有false值的 array副本。
+ * 在javascript中, false, null, 0, "", undefined 和 NaN 都是false值.
+ * 有点 filter 的意思
+ */
+const compact = (arr) => {
+  if (!Array.isArray(arr)) {
+    throw '请传入数组';
+  }
+  // 使用原生数组api
+  return arr.filter(item => !!item);
+}
+
+// console.log(compact([0, 1, false, 2, '', 3]))
+
+
+/**
+ * @description 闭包封装下给flatten用，主要为了解决shallow为true只减少一维嵌套的需求
+ */
+const flat = () => {
+  let level = 0;
+  const func =  (arr, shallow) => {
+    if (!Array.isArray(arr)) {
+      throw '请传入数组';
+    }
+    level++;
+    return arr.reduce((prev, next) => {
+      return Array.isArray(next) && (!shallow || level === 1) ? prev.concat(func(next, shallow)) : prev.concat(next);
+    }, [])
+  }
+  return func;
+}
+
+/**
+ * @description 将一个嵌套多层的数组 array（数组） (嵌套可以是任何层数)转换为只有一层的数组。
+ * 如果你传递 shallow参数，数组将只减少一维的嵌套。
+ * 
+ * 经过实测发现，只要 shallow 为true，只减少一维嵌套；false的话全部平铺
+ */
+
+const flatten = flat();
+
+// console.log(flatten([1, [2], [3, [[4]]]])) // [1, 2, 3, 4]
+// console.log(flatten([1, [2], [3, [[4]]]], 0)) // [1, 2, 3, 4]
+// console.log(flatten([1, [2], [3, [[4]]]], NaN)) // [1, 2, 3, 4]
+// console.log(flatten([1, [2], [3, [[4]]]], 1)) // [1, 2, 3, [[4]]]
+
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} values
+ * @description 返回一个删除所有values值后的 arr 副本 
+ */
+const without = (arr, ...values) => {
+  if (!Array.isArray(arr)) {
+    throw '请传入数组';
+  }
+  return arr.filter(item => !values.includes(item));
+}
+
+// console.log(without([1, 2, 3], 1, 2)) // [3]
+
+
+
+/**
+ * 
+ * @param  {...any} arrays 
+ * @description 返回传入的 arrays（数组）并集
+ * 按顺序返回，返回数组的元素是唯一的，可以传入一个或多个 arrays （数组）
+ * 
+ * 合并 + 去重
+ * 我用了es6的api，不用的话需要不少代码
+ */
+const union = (...arrays) => {
+  if (!Array.isArray(arrays)) {
+    throw '请传入数组';
+  }
+  return arrays.reduce((prev, next) => {
+    if (!Array.isArray(next)) {
+      throw '请传入数组';
+    }
+    return Array.from(new Set(prev.concat(next)));
+  }, [])
+}
+
+// console.log(union([1], [1], [1, 2, 3], [[11]])) // [1, 2, 3, [11]]
+
+
+
+/**
+ * 
+ * @param  {...any} arrays 
+ * @description 返回传入 arrays（数组）交集。
+ * 结果中的每个值是存在于传入的每个arrays（数组）里。
+ */
+const intersection = (...arrays) => {
+  if (!Array.isArray(arrays)) {
+    throw '请传入数组';
+  }
+}
