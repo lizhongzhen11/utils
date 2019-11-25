@@ -1058,16 +1058,21 @@ const without = (arr, ...values) => {
  * 合并 + 去重
  * 我用了es6的api，不用的话需要不少代码
  */
+// const union = (...arrays) => {
+//   if (!Array.isArray(arrays)) {
+//     throw '请传入数组';
+//   }
+//   return arrays.reduce((prev, next) => {
+//     if (!Array.isArray(next)) {
+//       throw '请传入数组';
+//     }
+//     return Array.from(new Set(prev.concat(next)));
+//   }, [])
+// }
+
+// 利用flatten，卧槽，代码更少了！
 const union = (...arrays) => {
-  if (!Array.isArray(arrays)) {
-    throw '请传入数组';
-  }
-  return arrays.reduce((prev, next) => {
-    if (!Array.isArray(next)) {
-      throw '请传入数组';
-    }
-    return Array.from(new Set(prev.concat(next)));
-  }, [])
+  return Array.from(new Set(flatten(arrays, true)));
 }
 
 // console.log(union([1], [1], [1, 2, 3], [[11]])) // [1, 2, 3, [11]]
@@ -1080,8 +1085,273 @@ const union = (...arrays) => {
  * @description 返回传入 arrays（数组）交集。
  * 结果中的每个值是存在于传入的每个arrays（数组）里。
  */
+// 初始版本
+// const intersection = (...arrays) => {
+//   if (!Array.isArray(arrays)) {
+//     throw '请传入数组';
+//   }
+//   let firstArr = arrays[0];
+//   let result = [];
+//   for (let i = 0; i < firstArr.length; i++) {
+//     let isExist = true;
+//     for (let j = 1; j < arrays.length; j++) {
+//       if (!arrays[j].includes(firstArr[i])) {
+//         isExist = false;
+//         break;
+//       }
+//     }
+//     isExist && result.push(firstArr[i]);
+//   }
+//   return result;
+// }
+
+// 利用数组原生api优化版本
 const intersection = (...arrays) => {
-  if (!Array.isArray(arrays)) {
-    throw '请传入数组';
-  }
+  arrays.forEach(item => {
+    if (!Array.isArray(item)) {
+      throw '所有参数都应该是数组';
+    }
+  })
+  return arrays[0].filter(item => arrays.every(arr => arr.includes(item)))
 }
+
+// console.log(intersection([1, 2, 3], [101, 2, 1, 10], [2, 1])) // [1, 2]
+
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @param  {...any} others
+ * @description 类似于without，但返回的值来自array参数数组，并且不存在于 other 数组。
+ * 即 返回的值 只属于 arr 
+ * 与 without 区别在于，difference 所有的参数都是数组
+ */
+// 初始版本
+// const difference = (arr, ...others) => {
+//   if (!Array.isArray(arr)) {
+//     throw '请传入数组';
+//   }
+//   let result = [];
+//   for (let i = 0; i < arr.length; i++) {
+//     let isExist = false;
+//     for (let j = 0; j < others.length; j++) {
+//       if (others[j].includes(arr[i])) {
+//         isExist = true;
+//         break
+//       }
+//     }
+//     !isExist && result.push(arr[i]);
+//   }
+//   return result;
+// }
+
+// 利用数组原生api优化
+// const difference = (arr, ...others) => {
+//   if (!Array.isArray(arr)) {
+//     throw '所有参数都应该是数组';
+//   }
+//   others.forEach(item => {
+//     if (!Array.isArray(item)) {
+//       throw '所有参数都应该是数组';
+//     }
+//   })
+//   return arr.filter(item => !others.some(other => other.includes(item)))
+// }
+
+
+// 再度优化，看了源码才意识到，可以把剩余所有的参数平铺到一个数组中在进行比较
+// 其实该方法就是为了拿到 第一个参数数组 与 剩下所有参数 的不相交数据，
+// 至于剩下所有参数完全可以合并到一个数组里面啊！这样即使遍历也可以分开了，不用继续嵌套
+const difference = (arr, ...others) => {
+  const rest = flatten(others);
+  return arr.filter(item => !rest.includes(item));
+}
+
+// console.log(difference([1, 2, 3, 4, 5], [5, 2, 10])) // [1, 3, 4]
+
+
+
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} isSorted 
+ * @param {*} iteratee 
+ * @description 返回 arr 去重后的副本, 使用 === 做相等测试.
+ * 如果您确定 arr 已经排序, 那么给 isSorted 参数传递 true值, 此函数将运行的更快的算法. 
+ * 如果要处理对象元素, 传递 iteratee 函数来获取要对比的属性.
+ */
+// 先不考虑 isSorted 和 iteratee，最简单版本
+// const uniq = (arr, isSorted, iteratee) => {
+//   return Array.from(new Set(arr));
+// }
+
+// 处理对象元素，根据某个属性值去重，需要传iteratee函数
+const uniq = (arr, iteratee) => {
+  if (!iteratee) {
+    return Array.from(new Set(arr));
+  }
+  if (type(iteratee) !== '[object Function]') {
+    throw 'iteratee应为函数';
+  }
+  // 嵌套 for 循环实现
+  // let result = [];
+  // let len = arr.length;
+  // for (let i = 0; i < len; i++) {
+  //   let isExist = false;
+  //   for (let j = 0; j < result.length; j++) {
+  //     if (iteratee(result[j]) === iteratee(arr[i])) {
+  //       isExist = true;
+  //     }
+  //   }
+  //   !isExist && result.push(arr[i]);
+  // }
+  // return result;
+
+  // 使用数组原生api实现，简洁很多
+  return arr.reduce((prev, next) => {
+    return prev.some(item => iteratee(item) === iteratee(next)) ? prev : prev.concat(next);
+  }, [])
+}
+
+console.log(uniq([1, 1, 1, 2, 3, 2, 2])) // [1, 2, 3]
+
+var users = [
+  {'id': 1, 'name': 'Bob', 'last': 'Brown'},
+  {'id': 2, 'name': 'Ted', 'last': 'White'},
+  {'id': 3, 'name': 'Frank', 'last': 'James'},
+  {'id': 4, 'name': 'Ted', 'last': 'Jones'},
+  {'id': 1, 'name': 'a', 'last': 'a'},
+  {'id': 3, 'name': 'b', 'last': 'b'},
+];
+console.log(uniq(users, (item) => {return item.id}))
+
+const zip = (...arrays) => {}
+
+
+const unzip = (...arrays) => {}
+
+
+const object = () => {}
+
+/**
+ * 
+ * @param {*} arr 
+ * @param {*} val 
+ * @param {*} isSorted 
+ */
+// 使用数组原生api
+// const indexOf = (arr, val, isSorted) => {
+//   return arr.findIndex(item => item === val);
+// }
+
+// 使用普通for循环
+const indexOf = (arr, val, isSorted) => {
+  let len = arr.length;
+  for (let i = 0; i < len; i++) {
+    if (arr[i] === val) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+
+/**
+ * 
+ * @param {*} array 
+ * @param {*} value 
+ * @param {*} param2 
+ */
+
+// 使用原生lastIndexOf
+// const lastIndexOf = (array, value, fromIndex) => {
+//   return array.lastIndexOf((item) => item === val);
+// }
+
+// 使用for循环
+const lastIndexOf = (array, value, fromIndex) => {
+  let len = array.length;
+  let min = Math.min(Number(fromIndex) >=0 ? Number(fromIndex) : len - 1, len - 1);
+  for (let i = min; i >= 0; i--) {
+    if (array[i] === value) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// console.log(lastIndexOf([3, 2, 1, 2], 2, 0)) // -1
+
+const sortedIndex = () => {}
+
+
+/**
+ * 
+ * @param {*} array 
+ * @param {*} predicate 
+ * @param {*} context 
+ * @description 其实就是数组api findIndex，只不过参数可以不是函数
+ * 经过测试，underscore里面的findIndex有bug，不传或传null居然返回0
+ */
+// 数组api
+// const findIndex = (array, predicate, context) => {
+//   if (type(predicate) === '[object Function]') {
+//     return array.findIndex(predicate);
+//   }
+//   if (type(predicate) === '[object Object]') {
+//     const keys = Object.keys(predicate);
+//     return array.findIndex((item) => keys.every(key => item[key] === predicate[key]))
+//   }
+//   return -1;
+// }
+
+// for循环模拟
+const findIndex = (array, predicate) => {
+  const len = array.length;
+  if (type(predicate) === '[object Function]') {
+    for (let i = 0; i < len; i++) {
+      if (predicate(array[i])) {
+        return i;
+      }
+    }
+  }
+  if (type(predicate) === '[object Object]') {
+    const keys = Object.keys(predicate);
+    let isEqual = true;
+    for (let i = 0; i < len; i++) {
+      isEqual = true;
+      for (let j = 0; j < keys.length; j++) {
+        if (predicate[keys[j]] !== array[i][keys[j]]) {
+          isEqual = false;
+          break;
+        }
+      }
+      if (isEqual) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+
+var users = [
+  {'id': 1, 'name': 'Bob', 'last': 'Brown'},
+  {'id': 2, 'name': 'Ted', 'last': 'White'},
+  {'id': 3, 'name': 'Frank', 'last': 'James'},
+  {'id': 4, 'name': 'Ted', 'last': 'Jones'}
+];
+// console.log(findIndex(users, (item) => item.id === 3)) // 2
+// console.log(findIndex([99, 9, 1, 2])) // -1
+// console.log(findIndex([1, 2, 3], 2)) // -1
+// console.log(findIndex([1, 2, 3], {'2': 1})) // -1
+// console.log(findIndex(users, {id: 3})) // 2
+
+
+
+
+const findLastIndex = (array, predicate) => {}
+
+
+const range = () => {}
