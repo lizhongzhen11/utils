@@ -292,7 +292,7 @@ const some = (arr, fn) => {
  */
 const flatTree = (arr) => {
   return arr.reduce((item, next) => {
-    return next.children ? item.concat(flat(next.children), next) : item.concat(next)
+    return next.children ? item.concat(flatTree(next.children), next) : item.concat(next)
   }, [])
 }
 
@@ -1215,7 +1215,7 @@ const uniq = (arr, iteratee) => {
   }, [])
 }
 
-console.log(uniq([1, 1, 1, 2, 3, 2, 2])) // [1, 2, 3]
+// console.log(uniq([1, 1, 1, 2, 3, 2, 2])) // [1, 2, 3]
 
 var users = [
   {'id': 1, 'name': 'Bob', 'last': 'Brown'},
@@ -1225,15 +1225,156 @@ var users = [
   {'id': 1, 'name': 'a', 'last': 'a'},
   {'id': 3, 'name': 'b', 'last': 'b'},
 ];
-console.log(uniq(users, (item) => {return item.id}))
+// console.log(uniq(users, (item) => {return item.id}))
 
-const zip = (...arrays) => {}
+/**
+ * 
+ * @param  {...any} arrays 
+ * @description 将 每个arrays中相应位置的值合并在一起。
+ * 相同下标对应的元素，组成新数组
+ * ['moe', 'larry', 'curly'], [30, 40, 50], [true, false, false] => [["moe", 30, true], ["larry", 40, false], ["curly", 50, false]]
+ * 
+ * 看了源码，发现underscore其实也是for循环嵌套，只不过利用了已经实现的一些方法，用到了max, map, pluck等方法
+ * 源码思想跟我 普通for循环 版本类似，先确定长度，然后每个位置 赋值 (源码是直接赋值)
+ */
+
+// 普通for循环 
+// const zip = (...arrays) => {
+//   let len = arrays.length;
+//   let newLen = 0;
+//   for (let i = 0; i < len; i++) {
+//     newLen = Math.max(newLen, arrays[i].length);
+//   }
+//   let result = Array(newLen);
+//   for (let i = 0; i < newLen; i++) {
+//     result[i] = [];
+//     for (let j = 0; j < len; j++) {
+//       result[i].push(arrays[j][i]);
+//     }
+//   }
+//   return result;
+// }
+
+// 使用数组forEach嵌套
+// const zip = (...arrays) => {
+//   let result = [];
+//   arrays.forEach(arr => {
+//     arr.forEach((item, index) => {
+//       if (!Array.isArray(result[index])) {
+//         result[index] = arr.length > arrays.length ? Array(arr.length - arrays.length).fill() : [];
+//       }
+//       result[index].push(item);
+//     })
+//   })
+//   return result;
+// }
+
+// 使用数组reduce+forEach
+const zip = (...arrays) => {
+  let len = arrays.length;
+  return arrays.reduce((prev, next) => {
+    let nextLen = next.length;
+    next.forEach((item, index) => {
+      Array.isArray(prev[index]) ? prev[index].push(item) : nextLen > len ? prev.push([...Array(nextLen - len).fill() , item]) : prev.push([item]);
+    });
+    return prev;
+  }, []);
+}
+
+// console.log(zip(['moe', 'larry', 'curly'], [30, 40, 50], [true, false, false])) // [["moe", 30, true], ["larry", 40, false], ["curly", 50, false]]
+// console.log(zip(['moe', 'larry', 'curly'], [30, 40, 50], [true, false, false, false, true]))
+// [["moe", 30, true], ["larry", 40, false], ["curly", 50, false], [undefined, undefined, false], [undefined, undefined, true]]
 
 
-const unzip = (...arrays) => {}
+
+/**
+ * 
+ * @param arrays 
+ * @description 与zip功能相反的函数，给定若干arrays，返回一串联的新数组。
+ * 其第一元素个包含所有的输入数组的第一元素，其第二包含了所有的第二元素，依此类推。
+ * [["moe", 30, true], ["larry", 40, false], ["curly", 50, false]] =>
+ * [['moe', 'larry', 'curly'], [30, 40, 50], [true, false, false]]
+ */
+const unzip = (arrays) => {
+  let len = arrays.length;
+  let resultLen = arrays[0].length;
+  let result = Array(resultLen);
+  for (let i = 0; i < resultLen; i++) {
+    if (!Array.isArray(result[i])) {
+      result[i] = [];
+    }
+    for (let j = 0; j < len; j++) {
+      arrays[j][i] !== undefined && result[i].push(arrays[j][i]);
+    }
+  }
+  return result;
+}
+
+// console.log(unzip([["moe", 30, true], ["larry", 40, false], ["curly", 50, false]])) 
+// [['moe', 'larry', 'curly'], [30, 40, 50], [true, false, false]]
+// console.log(unzip([["moe", 30, true], ["larry", 40, false], ["curly", 50, false], [undefined, undefined, false]]))
+// [['moe', 'larry', 'curly'], [30, 40, 50], [true, false, false, false]]
 
 
-const object = () => {}
+
+// zip和unzip共用该方法
+const unzip2 = (arrays, type) => {
+  let len = arrays.length;
+  let resultLen = 0;
+  for (let i = 0; i < len; i++) {
+    resultLen = Math.max(resultLen, arrays[i].length);
+  }
+  let result = Array(resultLen);
+  for (let i = 0; i < resultLen; i++) {
+    result[i] = [];
+    for (let j = 0; j < len; j++) {
+      (arrays[j][i] !== undefined || type === 'zip') && result[i].push(arrays[j][i]);
+    }
+  }
+  return result;
+}
+
+const zip2 = (...arrays) => unzip2(arrays, 'zip');
+
+// console.log(zip2(['moe', 'larry', 'curly'], [30, 40, 50], [true, false, false, false]))
+// console.log(unzip2([["moe", 30, true], ["larry", 40, false], ["curly", 50, false], [,,false]]))
+
+
+
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} values
+ * @description 将数组转换为对象
+ * 传递任何一个单独[key, value]对的列表，或者一个键的列表和一个值得列表。 如果存在重复键，最后一个值将被返回。
+ * ['moe', 'larry', 'curly'], [30, 40, 50] =>
+ * {moe: 30, larry: 40, curly: 50} 
+ */
+const object = (list, values) => {
+  let result = {};
+  // if (!values) {
+  //   list.forEach(item => {
+  //     result[item[0]] = item[1];
+  //   })
+  // } else {
+  //   list.forEach((item, index) => {
+  //     result[item] = values[index];
+  //   })
+  // }
+
+  list.forEach((item, index) => {
+    const key = values ? item : item[0];
+    result[key] = values ? values[index] : item[1];
+  })
+
+  return result;
+}
+
+// console.log(object(['moe', 'larry', 'curly'], [30, 40, 50])) // {moe: 30, larry: 40, curly: 50}
+// console.log(object(['moe', 'larry', 'curly'])) // { m: 'o', l: 'a', c: 'u' }
+// console.log(object([['moe', 30, '1'], ['larry', 40, '2'], ['curly', 50, '3']])) // {moe: 30, larry: 40, curly: 50}
+
 
 /**
  * 
@@ -1284,7 +1425,68 @@ const lastIndexOf = (array, value, fromIndex) => {
 
 // console.log(lastIndexOf([3, 2, 1, 2], 2, 0)) // -1
 
-const sortedIndex = () => {}
+
+
+/**
+ * 
+ * @param {*} list 
+ * @param {*} value 
+ * @param {*} iteratee 
+ * @param {*} context 
+ * @description 使用二分查找确定value在list中的位置序号，value按此序号插入能保持list原有的排序。
+ * 如果提供iterator函数，iterator将作为list排序的依据，包括你传递的value 。
+ * iterator也可以是字符串的属性名用来排序(比如length)。
+ * [10, 20, 30, 40, 50], 35 => 3
+ * sortedIndex([{name: 'moe', age: 40}, {name: 'curly', age: 60}], {name: 'larry', age: 50}, 'age') => 1
+ */
+
+// 最普通的for循环 
+// const sortedIndex = (list, value, iteratee, context) => {
+//   let len = list.length;
+//   for (let i = 0; i < len - 1; i++) {
+//     if (type(iteratee) === '[object String]') {
+//       if (list[i][iteratee] < value[iteratee] && list[i + 1][iteratee] > value[iteratee]) {
+//         return i + 1;
+//       }
+//     }
+//     if (type(iteratee) === '[object Function]') {
+//       if (iteratee(list[i]) < iteratee(value) && iteratee(list[i + 1]) > iteratee(value)) {
+//         return i + 1;
+//       }
+//     }
+//     if (list[i] < value && list[i + 1] > value) {
+//       return i + 1;
+//     }
+//   }
+//   return 0;
+// }
+
+
+// 二分查找
+const sortedIndex = (list, value, iteratee, context) => {
+  let temp = list;
+  const cb = type(iteratee) === '[object String]' ? (item) => item[iteratee] : type(iteratee) === '[object Function]' ? iteratee : (item) => item;
+  let mid = temp.length - 2;
+  while(temp.length > 1) {
+    mid = Math.max( Math.ceil(temp.length / 2) - 1, 0);
+    if (cb(temp[mid]) < cb(value) && cb(temp[mid + 1]) > cb(value) ) {
+      return mid + 1;
+    }
+    if (cb(value) > cb(temp[mid])) {
+      temp = temp.slice(mid);
+    } else {
+      temp = temp.slice(0, mid);
+    }
+  }
+  return mid;
+}
+
+// console.log(sortedIndex([10, 20, 30, 40, 50], 35)) // 3
+// console.log(sortedIndex([{name: 'moe', age: 40}, {name: 'curly', age: 60}], {name: 'larry', age: 50})) // 0
+// console.log(sortedIndex([{name: 'moe', age: 40}, {name: 'curly', age: 60}], {name: 'larry', age: 50}, 'age')) // 1
+// console.log(sortedIndex([{name: 'moe', age: 40}, {name: 'curly', age: 60}], {name: 'larry', age: 50}, (item) => item.age)) // 1
+// console.log(sortedIndex([{name: 'moe', age: 40}, {name: 'curly', age: 60}], {name: 'larry', age: 50}, (item) => item.name)) // 0
+
 
 
 /**
@@ -1354,4 +1556,42 @@ var users = [
 const findLastIndex = (array, predicate) => {}
 
 
-const range = () => {}
+/**
+ * 
+ * @param {*} start 
+ * @param {*} stop 
+ * @param {*} step 
+ * @description 一个用来创建整数灵活编号的列表的函数，便于each 和 map循环。
+ * 如果省略start则默认为 0；step 默认为 1
+ * 返回一个从start 到stop的整数的列表，用step来增加 （或减少）独占。
+ * 值得注意的是，如果stop值在start前面（也就是stop值小于start值），那么值域会被认为是零长度，而不是负增长。
+ * 如果你要一个负数的值域 ，请使用负数step.
+ */
+const range = (start = 0, stop, step = 1) => {
+  let result = [];
+  step = stop > start ? step : step < 0 ? step : -1;
+  // if (stop < start) {
+  //   for (; stop < start; start = start + step) {
+  //     result.push(start);
+  //   }
+  // } else {
+  //   for (; start < stop; start = start + step) {
+  //     result.push(start);
+  //   }
+  // }
+
+  let len = Math.ceil((stop - start) / step) || 0;
+  for (let i = 0; i < len; i++, start = start + step) {
+    result.push(start);
+  }
+
+  return result;
+}
+
+// console.log(range(undefined, 10)) // [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+// console.log(range(1, 11)) // [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+// console.log(range(0, 30, 5)) // [ 0, 5, 10, 15, 20, 25 ]
+// console.log(range(0, -10, -1)) // [0, -1, -2, -3, -4, -5, -6, -7, -8, -9]
+// console.log(range(0)) // []
+// console.log(range(0, -10))
+// console.log(range(-1, 10))
