@@ -6,6 +6,8 @@ utils文件主要借鉴于<a href="https://github.com/jashkenas/underscore">unde
 
 function.js 主要实现 underscore 库中关于函数的api
 
+object.js 主要实现 underscore 库中关于object的api
+
 
 ## 注意
 
