@@ -15,3 +15,5 @@ object.js 主要实现 underscore 库中关于object的api
 - `[].concat([1])` // [1]; 有点扩展运算符的意思
 - `sortedIndex` 使用二分查找算法的话，有点坑，我算法这块不行，写+测试了好久才通过。主要是判断条件问题，遇到只传递对象却没有传iteratee时，默认是`'[object Object]'`与`'[object Object]'`比较，会陷入死循环，所以去掉等号
 - `compose`方法有点饶人，我是利用`reduceRight`来实现的
+- 根据`nodeType === 1`来判断是不是dom节点，第一次知道
+- 根据`callee`来判断是不是`arguments`对象，第一次知道
