@@ -690,8 +690,8 @@ const propertyOf = (obj) => {
  * @description 返回一个断言函数，这个函数会给你一个断言可以用来辨别给定的对象是否匹配attrs指定键/值属性。
  */
 const matcher = (attrs) => {
-  return () => {
-
+  return (obj) => {
+    return isMatch(obj, attrs);
   }
 }
 
@@ -722,5 +722,35 @@ const isMatch = (obj, props) => {
  * @param {0} obj 
  * @param {*} other
  * @description 两个对象之间的优化深度比较，确定他们是否应被视为相等 
+ * 
+ * 源码挺多的，有点小复杂
+ * 
+ * 注意点：
+ * 1. NaN 不和任何值相等，但是如果两个对象的属性值都是NaN时，这里应该返回true
+ * 2. 源码还 判断了传入的值可能是 underscore 实例的情况
+ * 3. 源码认为一个为 null，另一个为 undefined，则不相等，应该直接用 === 啊
+ * 4. 源码还考虑到Symbol和正则，我没考虑到
  */
-const isEqual = (obj, other) => {}
+const isEqual = (obj, other) => {
+  const ks = keys(obj);
+  const len = ks.length;  
+  for (let i = 0; i < len; i++) {
+    let key = ks[i];
+    if (isObject(obj[key] && isObject(other[key]))) {
+      if (!isEqual(obj[key], other[key])) {
+        return false;
+      }
+    } else {
+      return obj[key] === other[key] || (isNaN(obj[key]) && isNaN(other[key]));
+    }
+  }
+  return true;
+}
+
+var obj1 = {a: {aa: {}}}
+var obj2 = clone(obj1)
+var obj3 = {a: ''}
+var obj4 = [1]
+var obj5 = clone(obj4)
+console.log(isEqual(obj1, obj3))
+console.log(isEqual(obj4, obj5))
