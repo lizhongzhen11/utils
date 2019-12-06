@@ -8,6 +8,8 @@ function.js 主要实现 underscore 库中关于函数的api
 
 object.js 主要实现 underscore 库中关于object的api
 
+on.js 主要实现发布订阅模式
+
 
 ## 注意
 
