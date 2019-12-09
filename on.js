@@ -107,3 +107,31 @@ sub2.dispatch('a', '+++') // '+++'
 sub2.dispatch('a', '+++', '---', '===') // '+++' '---' '==='
 sub2.off()
 sub2.dispatch('a', 'aaaaaa') // 无反应
+
+
+
+// 第三版，能订阅多个
+class Sub3 {
+  constructor () {
+    this.subs = [];
+  }
+  add ({type, fn}) {
+    this.subs.push({type, fn});
+  }
+  notify (type, ...args) {
+    this.subs.forEach(sub => {
+      if (!type) {
+        sub.fn();
+      }
+      if (type === sub.type) {
+        sub.fn(...args);
+      }
+    })
+  }
+}
+
+let sub3 = new Sub3();
+sub3.add({type: 'a', fn: () => {console.log('aaaaaa')}});
+sub3.add({type: 'b', fn: (...args) => {console.log(...args)}});
+sub3.notify(); // 'aaaaaa'  undefined
+sub3.notify('b', 'bbbbbb'); // 'bbbbbb'
