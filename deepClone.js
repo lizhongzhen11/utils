@@ -6,11 +6,13 @@
  * 
  * @description 基于以上缺陷，需要写一个较好的深拷贝函数来应对日常开发。起码undefined,function,NaN,Infinity,Date等能正常拷贝才行
  * @readonly 难点：
- * @see Function如何深拷贝？我还真不知道怎么做。看到有这样的： (new fn).constructor，但是测试发现并不行
  * @see Symbol如何深拷贝？我把它放到原始值里面直接赋值了。
  * @see Date如何深拷贝？我也不知道。。。还是百度的=>再次实例化就行了！！！ new Date(obj[key])
  * @see Array这种特殊的Object需要考虑到！！！
  * @see 循环引用如何避免？增加第二个参数，缓存所有已出现过的父级对象（包括数组），只要确定父级对象数组中存在该对象，说明它是循环引用！
+ * @see Function如何深拷贝？我还真不知道怎么做。看到有这样的：
+ * (new fn).constructor，但是测试发现并不行
+ * 后来刷知乎发现，通过bind改变this执行即可返回新函数！！！
  */
 
 const deepClone = (obj, fathers = []) => {
@@ -44,6 +46,10 @@ const deepClone = (obj, fathers = []) => {
         break
       case '[object Date]':
         result[key] = new Date(obj[key])
+        break
+      case '[object Function]':
+        result[key] = obj[key].bind(obj)
+        break
       default:
         result[key] = obj[key]
     }
@@ -59,15 +65,16 @@ const isPrimitive = (obj) => {
 
 
 
-let obj = {a : 1, b: NaN, c: undefined, d: Infinity, e: true, f: '', g: null, h: {}, i: new Date(), j: []}
+let obj = {a : 1, b: NaN, c: undefined, d: Infinity, e: true, f: '', g: null, h: {}, i: new Date(), j: [], k: () => {}}
 obj.h.a = obj
 obj.j.push({obj: obj})
+obj.k.a = 'a'
 let obj1 = deepClone(obj)
 obj1.a = 2
 obj1.h.a = NaN 
 obj1.j[0]['pp'] = '...'
 console.log(obj1)
-
+console.log(obj1.k.a) // undefined
 console.log(obj)
 
 let obj2 = [1, {a: 1}]
