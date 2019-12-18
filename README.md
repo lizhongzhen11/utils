@@ -10,6 +10,8 @@ object.js 主要实现 underscore 库中关于object的api
 
 on.js 主要实现发布订阅模式
 
+deepClone.js 主要实现深拷贝，可以拷贝函数
+
 
 ## 注意
 
@@ -19,3 +21,9 @@ on.js 主要实现发布订阅模式
 - `compose`方法有点饶人，我是利用`reduceRight`来实现的
 - 根据`nodeType === 1`来判断是不是dom节点，第一次知道
 - 根据`callee`来判断是不是`arguments`对象，第一次知道
+
+
+## 模拟深拷贝注意
+1. `Array`这种特殊的对象需要考虑！！！
+2. 对象间的循环引用问题，加第二个参数`fathers`（数组），将所有已出现过的父级对象全缓存进去，根据目标对象在不在`fathers`中就能判断
+3. `Date`对象深拷贝，只需要`new Date(Date对象)`即可！！！
