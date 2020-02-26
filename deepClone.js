@@ -13,6 +13,14 @@
  * @see Function如何深拷贝？我还真不知道怎么做。看到有这样的：
  * (new fn).constructor，但是测试发现并不行
  * 后来刷知乎发现，通过bind改变this执行即可返回新函数！！！
+ * 但是这应该不叫深拷贝，例如：
+ * function test1() {}
+ * test1.obj = {prop: {key: ''}}
+ * let test2 = test1.bind(null)
+ * test2.obj // undefined
+ * 
+ * 所以这里不叫深拷贝了，它只是得到新函数，旧函数上绑定的属性新函数并没有拷贝过来，
+ * 其实不应该有这种需求。
  */
 
 const deepClone = (obj, fathers = []) => {

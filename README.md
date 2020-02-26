@@ -1,16 +1,17 @@
 自己手动封装一些常用的业务公共方法以及模拟一些原生api的实现。
 
-utils文件主要借鉴于<a href="https://github.com/jashkenas/underscore">underscore</a>库。
-
-30s文件其实就是<a href="https://github.com/30-seconds/30-seconds-of-code">30-seconds-of-code</a>库的理解与手动操作实践。
-
-function.js 主要实现 underscore 库中关于函数的api
-
-object.js 主要实现 underscore 库中关于object的api
-
-on.js 主要实现发布订阅模式
-
-deepClone.js 主要实现深拷贝，可以拷贝函数
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">utils</a> 文件主要借鉴于<a href="https://github.com/jashkenas/underscore">underscore</a>库。
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">30s</a> 文件其实就是 <a href="https://github.com/30-seconds/30-seconds-of-code">30-seconds-of-code</a> 库的理解与手动操作实践。
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">function.js</a> 主要实现 underscore 库中关于函数的api
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">object.js</a> 主要实现 underscore 库中关于object的api
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">on.js</a> 主要实现发布订阅模式
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">deepClone.js</a> 主要实现深拷贝
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/myPromise.js">myPromise.js</a>模拟 `Promise`。对应的博客（其实博客里没啥内容，全在js里面，过程也在注释里面）：https://github.com/lizhongzhen11/lizz-blog/issues/7
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/myPromise.js">new.js</a>模拟 `new` 操作符。
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/bind.js">bind.js</a>模拟 `bind` 方法。（不用call/apply的话就用`obj.fn`形式调用）
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/call and apply.js">call and apply.js</a>模拟 `call` 和 `apply` 方法。
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/Set.js">Set.js</a>模拟 `Set` 数据结构。
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/new.js">Map.js</a>模拟 `Map` 数据结构。
 
 
 ## 注意
@@ -27,4 +28,30 @@ deepClone.js 主要实现深拷贝，可以拷贝函数
 1. `Array`这种特殊的对象需要考虑！！！
 2. 对象间的循环引用问题，加第二个参数`fathers`（数组），将所有已出现过的父级对象全缓存进去，根据目标对象在不在`fathers`中就能判断
 3. `Date`对象深拷贝，只需要`new Date(Date对象)`即可！！！
-4. `Function`对象深拷贝，只需要通过`bind`改变`this`指向即可！！！
+4. `Function`对象应该不存在深拷贝一说，也不应该有这种业务需求，可以通过 `bind` 改变 `this` 得到一个新函数，但这不是深拷贝，因为旧函数上绑定的属性新函数却没有。
+
+## 模拟Promise的注意点
+1. 我写的第一版是错的，都是屎。之所以留下来只是证明我思考过
+2. 第二版功能算是实现了，但是 then 方法其实不对，因为我只能接收一个参数
+3. 放开注释，直接node运行就可以测试
+4. 使用new实例化后，调用resolve或reject出现this丢失问题，需要`bind(this)`
+5. resolve或reject只能使用一次，那么最好不要放在原型链上
+6. 箭头函数不能用 `bind` 绑定 `this`，所以只能用 `function` 关键字声明
+7. 不管是new实例化还是resolve或reject或then或catch等执行后都应该返回该 Promise 对象
+8. all 方法如何写？all 和 race 最终也应该返回 Promise 对象！！！
+9. `all`方法，要在每个循环内的 `then` 方法内部去判断当前是不是所有的 MyPromise 状态都不为 `'pending'`，是的话 `all` 完成，可以 `resolve/reject`
+10. `race`方法，需要保证有一个 MyPromise 完成就直接 `resolve/reject`，后面完成的不允许 `resolve/reject`，否则会影响最后输出值
+
+## 模拟new的注意点
+1. 原型指向问题。`Object.setPrototypeOf(obj, constructor.prototype)`
+2. 如果构造函数返回对象，那么该对象会替换使用new内部生成的对象
+3. 内部用`call/apply`来改变`this`
+
+## 模拟bind注意点
+1. 返回函数
+2. 不用call/apply的话就用`obj.fn`形式调用
+
+## 模拟Set和Map注意点
+1. `NaN`算相等，通过数组 `includes` 可以规避；`indexOf`无法规避`NaN`，它认为不相等
+2. `delete`操作后需要将后面的元素对应的key前移
+3. `Symbol.iterator`需要掌握
