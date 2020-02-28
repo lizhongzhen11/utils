@@ -90,3 +90,78 @@ let obj3 = deepClone(obj2)
 obj3.push(NaN)
 console.log(obj2) // [ 1, { a: 1 } ]
 console.log(obj3) // [ 1, [Object: null prototype] { a: 1 }, NaN ]
+
+
+
+
+
+// 策略模式改写下
+// 依赖于 Object.prototype.toString.call 未被改变
+const typing = (target) => {
+  return Object.prototype.toString.call(target)
+}
+
+// 将各个类型对应的处理方式封装好
+const handler = {
+  '[object primitive]': (target) => { // 非 Object 类型全走这里
+    return target
+  },
+  '[object Function]': (fn, cachObj) => {
+    // return fn.bind(null) // 这里是生成新的函数，严格意义上不算深拷贝
+    // return fn // 正常来说也没这种需求，可以直接返回原来的函数
+    // 还可以选择遍历函数自有属性，通过深拷贝这些自有属性以及改变this值可以近似的认为深拷贝吧，
+    // 不过这个需求其实很操蛋，没道理存在
+    let newFn = fn.bind(null)
+    Object.keys(fn).forEach(key => {
+      if (fn.hasOwnProperty(key)) {
+        newFn[key] = deepClone2(fn[key], cachObj)
+      }
+    })
+    return newFn
+  },
+  '[object Array]': (arr, cachObj) => {
+    // let array = []
+    // arr.forEach(item => {
+    //   array.push(deepClone2(item))
+    // })
+    // return array
+    return arr.map(item => deepClone2(item, cachObj))
+  },
+  '[object Object]': (obj, cachObj) => {
+    if (cachObj.includes(obj)) { // 防止循环引用
+      return '循环引用'
+    }
+    cachObj.push(obj) // 防止循环引用
+    let keys = Object.keys(obj)
+    let object = Object.create(null)
+    keys.forEach(key => {
+      if (obj.hasOwnProperty(key)) {
+        object[key] = deepClone2(obj[key], cachObj)
+      }
+    })
+    return object
+  },
+}
+
+
+// 改版
+const deepClone2 = (target, cachObj = []) => {
+  let type = typing(target)
+  // 可选链，有对应的babel插件;
+  // 不用babel插件的话，谷歌浏览器需要开放相应的能力才能运行
+  return handler?.[type]?.(target, cachObj) || handler['[object primitive]'](target, cachObj) 
+  // return handler[type] ? handler[type](target) : handler['[object primitive]'](target)
+}
+
+
+let obj4 = {a : 1, b: NaN, c: undefined, d: Infinity, e: true, f: '', g: null, h: {}, i: new Date(), j: [], k: () => {}}
+obj4.h.a = obj4
+obj4.j.push({obj: obj4})
+obj4.k.a = 'a'
+let obj5 = deepClone2(obj4)
+obj5.a = 2
+obj5.h.a = NaN 
+obj5.j[0]['pp'] = '...'
+console.log(obj5)
+console.log(obj5.k.a) // undefined
+console.log(obj4)

@@ -15,8 +15,7 @@ const myNew = (constructor, ...args) => {
   if (typeof constructor !== 'function') {
     throw '请传入构造函数'
   }
-  let obj = Object.create(null)
-  Object.setPrototypeOf(obj, constructor.prototype)
+  let obj = Object.create(constructor.prototype)
   let result = constructor.call(obj, ...args)
   return result && typeof result === 'object' ? result : obj
 }
