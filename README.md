@@ -2,16 +2,17 @@
 
 - <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">utils</a> 文件主要借鉴于<a href="https://github.com/jashkenas/underscore">underscore</a>库。
 - <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">30s</a> 文件其实就是 <a href="https://github.com/30-seconds/30-seconds-of-code">30-seconds-of-code</a> 库的理解与手动操作实践。
-- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">function.js</a> 主要实现 underscore 库中关于函数的api
-- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">object.js</a> 主要实现 underscore 库中关于object的api
-- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">on.js</a> 主要实现发布订阅模式
-- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">deepClone.js</a> 主要实现深拷贝
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">function.js</a> 主要实现 underscore 库中关于函数的api。
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">object.js</a> 主要实现 underscore 库中关于object的api。
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">on.js</a> 主要实现发布订阅模式。
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/deepClone.js">deepClone.js</a> 主要实现深拷贝。
 - <a href="https://github.com/lizhongzhen11/utils/blob/master/myPromise.js">myPromise.js</a>模拟 `Promise`。对应的博客（其实博客里没啥内容，全在js里面，过程也在注释里面）：https://github.com/lizhongzhen11/lizz-blog/issues/7
 - <a href="https://github.com/lizhongzhen11/utils/blob/master/myPromise.js">new.js</a>模拟 `new` 操作符。
 - <a href="https://github.com/lizhongzhen11/utils/blob/master/bind.js">bind.js</a>模拟 `bind` 方法。（不用call/apply的话就用`obj.fn`形式调用）
 - <a href="https://github.com/lizhongzhen11/utils/blob/master/call and apply.js">call and apply.js</a>模拟 `call` 和 `apply` 方法。
 - <a href="https://github.com/lizhongzhen11/utils/blob/master/Set.js">Set.js</a>模拟 `Set` 数据结构。
 - <a href="https://github.com/lizhongzhen11/utils/blob/master/new.js">Map.js</a>模拟 `Map` 数据结构。
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/observe.js">observe.js</a>实现对象数据监听。
 
 
 ## 注意
@@ -45,9 +46,10 @@
 10. `race`方法，需要保证有一个 MyPromise 完成就直接 `resolve/reject`，后面完成的不允许 `resolve/reject`，否则会影响最后输出值
 
 ## 模拟new的注意点
-1. 原型指向问题。`Object.setPrototypeOf(obj, constructor.prototype)`
+1. 原型指向问题。`Object.create(constructor.prototype)`
 2. 如果构造函数返回对象，那么该对象会替换使用new内部生成的对象
 3. 内部用`call/apply`来改变`this`
+4. 箭头函数不能用作构造器，通过箭头函数没有原型这个特点来排除它
 
 ## 模拟bind注意点
 1. 返回函数

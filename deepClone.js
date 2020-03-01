@@ -149,8 +149,8 @@ const deepClone2 = (target, cachObj = []) => {
   let type = typing(target)
   // 可选链，有对应的babel插件;
   // 不用babel插件的话，谷歌浏览器需要开放相应的能力才能运行
-  return handler?.[type]?.(target, cachObj) || handler['[object primitive]'](target, cachObj) 
-  // return handler[type] ? handler[type](target) : handler['[object primitive]'](target)
+  return handler?.[type]?.(target, cachObj) || handler['[object primitive]'](target) 
+  // return handler[type] ? handler[type](target, cachObj) : handler['[object primitive]'](target)
 }
 
 
@@ -163,5 +163,5 @@ obj5.a = 2
 obj5.h.a = NaN 
 obj5.j[0]['pp'] = '...'
 console.log(obj5)
-console.log(obj5.k.a) // undefined
+console.log(obj5.k.a)
 console.log(obj4)
