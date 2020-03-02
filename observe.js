@@ -100,10 +100,10 @@ class DefineProperty {
   }
 }
 
-let obj_1 = {a: 'a', b: {}}
+let obj_1 = {a: 'a', b: {c: {}}}
 observeByDefineProperty(obj_1)
 console.log(obj_1.a)
 obj_1.a = 1
 console.log(obj_1.b)
-obj_1.b.c = 'c'
-console.log(obj_1.b.c)
+obj_1.b.c.d = 'd'
+console.log(obj_1.b.c.d)
