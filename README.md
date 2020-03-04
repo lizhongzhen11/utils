@@ -13,6 +13,7 @@
 - <a href="https://github.com/lizhongzhen11/utils/blob/master/Set.js">Set.js</a>模拟 `Set` 数据结构。
 - <a href="https://github.com/lizhongzhen11/utils/blob/master/new.js">Map.js</a>模拟 `Map` 数据结构。
 - <a href="https://github.com/lizhongzhen11/utils/blob/master/observe.js">observe.js</a>实现对象数据监听。
+- <a href="https://github.com/lizhongzhen11/utils/blob/master/instanceof.js">instanceof.js</a>模拟 `instanceof`。
 
 
 ## 注意
@@ -59,3 +60,8 @@
 1. `NaN`算相等，通过数组 `includes` 可以规避；`indexOf`无法规避`NaN`，它认为不相等
 2. `delete`操作后需要将后面的元素对应的key前移
 3. `Symbol.iterator`需要掌握
+
+## 模拟observe注意点
+1. `Proxy` 和 `Object.defineProperty` 都有 `set` 和 `get`，但是它们两接受参数和实际使用是不同的，需牢记
+2. 使用`Object.defineProperty`监听数组时有点复杂，需要魔改下那些能改变数组自身的方法，这里我记得vue源码是这样做的，但是我自己却没想起来怎么改，还是看了人家三年前的代码才知道怎么去实际改的
+3. 还是使用`Object.defineProperty`监听数组，如果使用`push`等改变数组自身的方法，其数组长度也会变化，需要对新增的数组下标属性进行监听，但是超出数组长度的下标，无法监听

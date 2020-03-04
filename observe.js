@@ -64,10 +64,13 @@ let obj = {
 
 
 // Object.defineProperty版本
-// 目前只实现了对象属性值的修改，新增以及数组还没考虑
+// 目前只实现了对象属性值的修改
 const observeByDefineProperty = (target) => {
   return isObject(target) ? (new DefineProperty(target)) : target
 }
+
+// 监听数组对象，必须要魔改下 能改变数组自身的方法
+const methods = ['push', 'pop', 'splice', 'shift', 'unshift', 'sort', 'reserve']
 
 class DefineProperty {
   constructor(target) {
@@ -77,16 +80,31 @@ class DefineProperty {
         this.defineProperty(target, key)
       }
     })
+    Array.isArray(target) && methods.forEach(method => this.defineProperty(target, method, true))
     return target
   }
-  defineProperty(target, key) {
+  defineProperty(target, key, isArray) {
     let oldValue = target[key]
+    let self = this
     Object.defineProperty(target, key, {
       enumerable: true,
       configurable: true,
       get() {
         console.log('get...', key)
-        return oldValue
+        return isArray ? (...args) => {
+          // 这段代码有弊端，虽然保证数组改变后，其下标也被监听了，
+          // 但是如果超出当前数组长度，采用直接下标赋值方式则无法监听
+          let oldLen = target.length
+          let res = Array.prototype[key].call(target, ...args)
+          let newLen = target.length
+          let diff = newLen - oldLen
+          if (diff > 0) {
+            for (let i = 0; i < diff; i++) {
+              self.defineProperty(target, oldLen + i)
+            }
+          }
+          return res
+        } : oldValue
       },
       set(newValue) {
         console.log('set...', newValue)
@@ -100,10 +118,33 @@ class DefineProperty {
   }
 }
 
-let obj_1 = {a: 'a', b: {c: {}}}
-observeByDefineProperty(obj_1)
-console.log(obj_1.a)
-obj_1.a = 1
-console.log(obj_1.b)
-obj_1.b.c.d = 'd'
-console.log(obj_1.b.c.d)
+// let obj_1 = {a: 'a', b: {c: {}}}
+// observeByDefineProperty(obj_1)
+// console.log(obj_1.a)
+// obj_1.a = 1
+// console.log(obj_1.b)
+// obj_1.b.c.d = 'd'
+// console.log(obj_1.b.c.d)
+
+let arr = [1]
+observeByDefineProperty(arr)
+arr.push(1, 2, 3)
+arr.splice(2)
+console.log(arr.push(1, 2, 3))
+console.log(arr.splice(2))
+console.log(arr[1])
+arr[1] = 10
+
+// let arr = []
+// Object.defineProperty(arr, 'push', {
+//   enumerable: true,
+//   configurable: true,
+//   writable: true,
+//   value: (...args) => {
+//     return Array.prototype['push'].call(arr, ...args)
+//   }
+// })
+
+// arr.push(1)
+// console.log(arr.push(1))
+// console.log(arr.length)
